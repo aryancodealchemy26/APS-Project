@@ -1,4 +1,8 @@
+
 import streamlit as st
+import pandas as pd
+import sqlite3
+from database import save_teacher_result
 # Importing our custom 'Brain' and 'AI' modules
 from logic import get_readiness_score, get_category
 from ai_agent import get_ai_advice
@@ -15,7 +19,11 @@ subject = st.selectbox("What is your main subject?",
                       ["Social Science", "Science", "Commerce", "Mathematics", "Other"])
 
 locality = st.radio("Where is your school located?", ["Urban", "Rural"])
-
+# New inputs for the Database
+teacher_name = st.text_input("Enter your Full Name")
+teacher_email = st.text_input("Enter your Email Address")
+# Add this in the Input Section of main.py
+teacher_gender = st.radio("Gender", ["Male", "Female", "Other", "Prefer not to say"], horizontal=True)
 # A slider for proficiency (1-5 scale like your survey)
 prof_level = st.slider("Rate your current AI proficiency (1=Beginner, 5=Expert)", 1, 5, 3)
 
@@ -37,4 +45,24 @@ if st.button("Generate My Sync Plan"):
         advice = get_ai_advice(subject, score, category)
         st.info(advice)
 
+    if teacher_name and teacher_email:
+        save_teacher_result(teacher_email, teacher_name, locality, subject, score,teacher_gender)
+        st.sidebar.success(f"Record saved for {teacher_name}!")
+    else:
+        st.warning("Please enter your Name and Email to save your result.")
     st.success("Roadmap generated! Good luck on your AI journey.")
+st.divider()
+if st.checkbox("Show Research Analytics (Admin Only)"):
+    conn = sqlite3.connect('research_data.db')
+    # Pandas can read SQL directly into a beautiful table!
+    df = pd.read_sql_query("SELECT * FROM teachers", conn)
+    
+    st.subheader("📊 Live Database View")
+    st.dataframe(df) # Shows an interactive Excel-like table
+    
+    # A quick chart showing the average score
+    st.subheader("📈 Average Readiness by Subject")
+    chart_data = df.groupby("subject")["readiness_score"].mean()
+    st.bar_chart(chart_data)
+    
+    conn.close()
