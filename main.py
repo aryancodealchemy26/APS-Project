@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from database import save_teacher_result
-# Importing our custom 'Brain' and 'AI' modules
+# Importing our custom 'Brain' and 'AI' modules.
 from logic import get_readiness_score, get_category
 from ai_agent import get_ai_advice
 
